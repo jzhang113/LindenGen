@@ -1,17 +1,45 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 
 namespace LindenGen.Graph
 {
     public class Graph<T> : IEnumerable<Vertex<T>>
     {
+        private static int vertexID;
+
         public IDictionary<int, Vertex<T>> Vertices { get; }
         public IDictionary<int, HashSet<int>> Edges { get; }
 
         public Graph() {
             Vertices = new Dictionary<int, Vertex<T>>();
             Edges = new Dictionary<int, HashSet<int>>();
+        }
+
+        internal Graph(T first, IEnumerable<ContinuingTerm<T>> following)
+        {
+            Vertices = new Dictionary<int, Vertex<T>>();
+            Edges = new Dictionary<int, HashSet<int>>();
+
+            Vertex<T> current = AddVertex(first);
+            foreach (ContinuingTerm<T> term in following)
+            {
+                Vertex<T> next = AddVertex(term.Term);
+                AddEdge(current, next);
+                current = next;
+            }
+        }
+
+        public Vertex<T> AddVertex(T value)
+        {
+            Vertex<T> found;
+            if ((found = FindByValue(value)) != null)
+                return found;
+
+            Vertex<T> newVertex = new Vertex<T>(vertexID++, value);
+            Vertices.Add(newVertex.ID, newVertex);
+            Edges.Add(newVertex.ID, new HashSet<int>());
+
+            return newVertex;
         }
 
         public void AddVertex(Vertex<T> vertex)

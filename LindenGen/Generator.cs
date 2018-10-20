@@ -44,8 +44,8 @@ namespace LindenGen
 
             return Graph;
         }
-        
-        internal void Dump()
+
+        private void Dump()
         {
             foreach (Vertex<Symbol> vertex in Graph)
             {

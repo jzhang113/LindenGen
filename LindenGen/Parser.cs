@@ -12,12 +12,12 @@ namespace LindenGen
         Block
     }
 
-    internal class ContinuingTerm
+    internal class ContinuingTerm<T>
     {
         public ArrowType ArrowType { get; }
-        public Symbol Term { get; }
+        public T Term { get; }
 
-        public ContinuingTerm(ArrowType type, Symbol term)
+        public ContinuingTerm(ArrowType type, T term)
         {
             ArrowType = type;
             Term = term;
@@ -76,29 +76,24 @@ namespace LindenGen
             from space in Parse.WhiteSpace.Many()
             select new Symbol(type, ident);
 
-        private static Parser<ArrowType> Connector(string op, ArrowType type) => Parse.String(op).Token().Return(type);
-        static readonly Parser<ArrowType> Strong = Connector("->", ArrowType.Weak);
-        static readonly Parser<ArrowType> Weak = Connector("->>", ArrowType.Strong);
-        static readonly Parser<ArrowType> Block = Connector("-o", ArrowType.Block);
-
         private static readonly Parser<ArrowType> arrowType =
-            from type in Parse.String("->").Return(ArrowType.Weak)
-                .Or(Parse.String("->>").Return(ArrowType.Strong))
+            from type in Parse.String("->>").Return(ArrowType.Strong)
+                .Or(Parse.String("->").Return(ArrowType.Weak))
                 .Or(Parse.String("-o").Return(ArrowType.Block))
             select type;
 
-        private static readonly Parser<ContinuingTerm> continuingTerm =
-            from connector in Weak.Or(Strong).Or(Block)
+        private static readonly Parser<ContinuingTerm<Symbol>> continuingTerm =
+            from connector in arrowType
             from space in Parse.WhiteSpace.Many()
             from next in term
-            select new ContinuingTerm(connector, next);
+            select new ContinuingTerm<Symbol>(connector, next);
 
         private static readonly Parser<Graph<Symbol>> graph =
             from first in term
             from following in continuingTerm.Many()
             from comment in commentParser.AnyComment.Many()
             from space in Parse.WhiteSpace.Many()
-            select new Graph<Symbol>();
+            select new Graph<Symbol>(first, following);
 
         // Parsing rules
         private static readonly Parser<Rule> rule =
@@ -119,7 +114,26 @@ namespace LindenGen
         private static readonly Parser<Rule> multirule =
             from rule in rule
             from following in continuingGraph.Many()
-            select new Rule(rule.Left, rule.Right);
+            select new Rule(rule.Left, following.Aggregate(rule.Right, (current, append) =>
+            {
+                IDictionary<int, int> translation = new Dictionary<int, int>();
+                foreach (Vertex<Symbol> vertex in append.Vertices.Values)
+                {
+                    int newID = current.AddVertex(vertex.Data).ID;
+                    translation.Add(vertex.ID, newID);
+                }
+
+                foreach (var kvp in append.Edges)
+                {
+                    int newKey = translation[kvp.Key];
+                    foreach (int neighbor in kvp.Value)
+                    {
+                        current.AddEdge(newKey, translation[neighbor]);
+                    }
+                }
+
+                return current;
+            }));
 
         private static readonly Parser<Grammar> grammar =
             from leading in Parse.WhiteSpace.Many()

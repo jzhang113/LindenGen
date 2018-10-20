@@ -1,7 +1,6 @@
 ﻿using LindenGen;
 using LindenGen.Graph;
 using System;
-using System.Diagnostics;
 using System.IO;
 
 namespace LindenGenTest
@@ -24,13 +23,14 @@ namespace LindenGenTest
                 Console.WriteLine("\n== Axioms ==");
                 foreach (Graph<Symbol> axiom in g.Axioms)
                 {
-                    Console.WriteLine(axiom);
+                    Dump(axiom);
                 }
 
                 Console.WriteLine("\n== Rules ==");
                 foreach (Rule rule in g.Rules)
                 {
-                    Console.WriteLine(rule);
+                    Dump(rule.Left);
+                    Dump(rule.Right);
                 }
 
                 //Generator gen = new Generator();
@@ -39,6 +39,23 @@ namespace LindenGenTest
             }
 
             System.Console.ReadLine();
+        }
+
+        private static void Dump(Graph<Symbol> g)
+        {
+            foreach (Vertex<Symbol> vertex in g)
+            {
+                Console.WriteLine(vertex.Data.Name);
+                Console.Write("Neighbors: ");
+
+                foreach (int neighborID in g.Edges[vertex.ID])
+                {
+                    Console.Write(g.Vertices[neighborID].Data.Name);
+                    Console.Write(" ");
+                }
+
+                Console.WriteLine();
+            }
         }
     }
 }

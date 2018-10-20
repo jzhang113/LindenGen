@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace LindenGen.Graph
+﻿namespace LindenGen.Graph
 {
     public class Vertex<T>
     {
