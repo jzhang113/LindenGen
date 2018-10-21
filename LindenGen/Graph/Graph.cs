@@ -1,5 +1,7 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace LindenGen.Graph
 {
@@ -56,7 +58,7 @@ namespace LindenGen.Graph
                 return false;
 
             // remove outgoing edges
-            foreach (int neighborID in Edges[id])
+            foreach (int neighborID in Edges[id].ToList())
                 RemoveEdge(id, neighborID);
 
             // remove incoming edges
@@ -116,7 +118,7 @@ namespace LindenGen.Graph
                 if ((found = FindByValue(vertex.Data)) == null)
                     return null;
 
-                if (!Edges[vertex.ID].IsSubsetOf(Edges[found.ID]))
+                if (!g.Edges[vertex.ID].IsSubsetOf(Edges[found.ID]))
                     return null;
 
                 remove.Add(found);

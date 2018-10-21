@@ -1,5 +1,6 @@
 ﻿using LindenGen.Graph;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace LindenGen
 {
@@ -21,24 +22,22 @@ namespace LindenGen
         public bool Apply(Graph<Symbol> g)
         {
             // check if we can apply the rule
-            ISet<Vertex<Symbol>> subvertices;
-            if ((subvertices = g.Subgraph(Left)) == null)
+            IDictionary<int, int> leftMapping;
+            if ((leftMapping = g.FindMapping(Left)) == null)
                 return false;
+
+            IDictionary<int, int> rightMapping = MatchSymbols(leftMapping);
 
             // remove extra vertices
             // TODO: wrong behavior around dangling edges
             // this might be single push out behavior? idkkkkk
-            List<int> remove = new List<int>();
             foreach (Vertex<Symbol> vertex in Left)
             {
-                Vertex<Symbol> found;
-                if ((found = Intersect.FindByValue(vertex.Data)) == null)
-                    remove.Add(vertex.ID);
-            }
-
-            foreach (int id in remove)
-            {
-                g.RemoveVertex(id);
+                List<Vertex<Symbol>> exist = Intersect.FindByType(vertex.Data.Type).ToList();
+                if (exist.Count == 0)
+                {
+                    g.RemoveVertex(leftMapping[vertex.ID]);
+                }
             }
 
             // remove edges in L-K
@@ -46,16 +45,17 @@ namespace LindenGen
             {
                 foreach (int neighborID in Left.Edges[vertex.ID])
                 {
-                    g.RemoveEdge(vertex.ID, neighborID);
+                    g.RemoveEdge(leftMapping[vertex.ID], leftMapping[neighborID]);
                 }
             }
 
             // add new vertices
             foreach (Vertex<Symbol> vertex in Right)
             {
-                Vertex<Symbol> found;
-                if ((found = Intersect.FindByValue(vertex.Data)) == null)
+                if (Intersect.FindByValue(vertex.Data) == null)
+                {
                     g.AddVertex(vertex);
+                }
             }
 
             // add edges in R-K
@@ -63,11 +63,27 @@ namespace LindenGen
             {
                 foreach (int neighborID in Right.Edges[vertex.ID])
                 {
-                    g.AddEdge(vertex.ID, neighborID);
+                    g.AddEdge(rightMapping[vertex.ID], rightMapping[neighborID]);
                 }
             }
 
             return true;
+        }
+
+        // Map right side of rules to corresponding elements to the mappings of the left side
+        private IDictionary<int, int> MatchSymbols(IDictionary<int, int> leftMapping)
+        {
+            IDictionary<int, int> rightMapping = new Dictionary<int, int>();
+            foreach (Vertex<Symbol> vertex in Right.Vertices.Values)
+            {
+                Vertex<Symbol> leftMatch;
+                if ((leftMatch = Left.FindByValue(vertex.Data)) != null)
+                    rightMapping.Add(vertex.ID, leftMapping[leftMatch.ID]);
+                else
+                    rightMapping.Add(vertex.ID, vertex.ID); // map new elements to themselves
+            }
+
+            return rightMapping;
         }
     }
 }

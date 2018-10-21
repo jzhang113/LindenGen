@@ -30,36 +30,19 @@ namespace LindenGen
 
         public Graph<Symbol> Run()
         {
-            System.Console.WriteLine("== Start ==");
-            Dump();
+            System.Console.WriteLine("\n== Start ==");
+            Graph.Dump();
 
             foreach (Rule rule in Rules)
             {
                 if (rule.Apply(Graph))
                 {
                     System.Console.WriteLine("== Rewrite ==");
-                    Dump();
+                    Graph.Dump();
                 }
             }
 
             return Graph;
-        }
-
-        private void Dump()
-        {
-            foreach (Vertex<Symbol> vertex in Graph)
-            {
-                System.Console.WriteLine(vertex.Data.Value);
-                System.Console.Write("Neighbors: ");
-
-                foreach (int neighborID in Graph.Edges[vertex.ID])
-                {
-                    System.Console.Write(Graph.Vertices[neighborID].Data.Value);
-                    System.Console.Write(" ");
-                }
-
-                System.Console.WriteLine();
-            }
         }
     }
 }

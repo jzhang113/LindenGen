@@ -28,5 +28,5 @@ T -> M => T -> K ->> L -> M
 
 # hard things
 K ->> LD -> T => K ->> LD -> L1 -> T, K ->> LD1 -> T
-T -> K ->> L => T -> KD ->> L, T -> KD1 ->> L
-T -> KD1 -> KD2 => T -> KD1, T -> KD2
+T -> K ->> L => T -> KP ->> L, T -> KP1 ->> L
+T -> KP1 -> KP2 => T -> KP1, T -> KP2

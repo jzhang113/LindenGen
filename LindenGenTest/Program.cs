@@ -2,6 +2,7 @@
 using LindenGen.Graph;
 using System;
 using System.IO;
+using System.Linq;
 
 namespace LindenGenTest
 {
@@ -33,9 +34,14 @@ namespace LindenGenTest
                     Dump(rule.Right);
                 }
 
-                //Generator gen = new Generator();
-                //gen.Load(parse.Compile());
-                //gen.Run();
+                // TODO: accept additional axioms
+                Generator gen = new Generator(g.Axioms.First());
+                foreach (Rule rule in g.Rules)
+                {
+                    gen.AddRule(rule);
+                }
+
+                gen.Run();
             }
 
             System.Console.ReadLine();

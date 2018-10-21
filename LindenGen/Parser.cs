@@ -1,5 +1,6 @@
 ﻿using LindenGen.Graph;
 using Sprache;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -24,23 +25,6 @@ namespace LindenGen
         }
     }
 
-    internal class Line
-    {
-
-    }
-
-    public class SymbolType
-    {
-        public int ID { get; set; }
-        public string Name { get; set; }
-
-        public SymbolType(int id, string name)
-        {
-            ID = id;
-            Name = name;
-        }
-    }
-
     public class Grammar
     {
         public ICollection<SymbolType> Symbols { get; }
@@ -57,8 +41,6 @@ namespace LindenGen
 
     public static class Parser
     {
-        private static int symbolTypeID = 0;
-
         private static readonly CommentParser commentParser = new CommentParser("#", "#!", "!#", "\n");
         
         // Parsing symbols
@@ -67,14 +49,14 @@ namespace LindenGen
             from space in Parse.WhiteSpace.Many()
             from comment in commentParser.AnyComment.Many()
             from space2 in Parse.WhiteSpace.Many()
-            select new SymbolType(symbolTypeID++, name);
+            select new SymbolType(SymbolTable.TypeID++, name);
 
         // Parsing axioms
         private static readonly Parser<Symbol> term =
             from type in Parse.Letter.AtLeastOnce().Text()
             from ident in Parse.Digit.Many().Text()
             from space in Parse.WhiteSpace.Many()
-            select new Symbol(type, ident);
+            select new Symbol(SymbolTable.Symbols[type], ident);
 
         private static readonly Parser<ArrowType> arrowType =
             from type in Parse.String("->>").Return(ArrowType.Strong)
